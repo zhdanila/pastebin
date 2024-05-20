@@ -1,1 +1,10 @@
 go get -u github.com/google/logger
+go get github.com/jmoiron/sqlx
+go get github.com/lib/pq
+go get github.com/spf13/viper
+go get github.com/joho/godotenv
+
+
+
+sudo docker run --name=pastebin -e POSTGRES_PASSWORD=qwerty -p 5436:5432 -d postgres
+sudo docker exec -it 612edc8c3db3 /bin/bash
