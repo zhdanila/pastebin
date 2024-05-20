@@ -19,16 +19,23 @@ func main() {
 		log.Fatalf("error with config file: %s", err.Error())
 	}
 
-	_, err := repository.NewPostgresDB(repository.Config{
-		Host:     viper.GetString("db.host"),
-		Port:     viper.GetString("db.port"),
-		Username: viper.GetString("db.username"),
-		DBName:   viper.GetString("db.dbname"),
-		SSLMode:  viper.GetString("db.sslmode"),
+	_, err := repository.NewPostgresDB(repository.PostgresConfig{
+		Host:     viper.GetString("postgresql_db.host"),
+		Port:     viper.GetString("postgresql_db.port"),
+		Username: viper.GetString("postgresql_db.username"),
+		DBName:   viper.GetString("postgresql_db.dbname"),
+		SSLMode:  viper.GetString("postgresql_db.sslmode"),
 		Password: os.Getenv("DB_PASSWORD"),
 	})
 	if err != nil {
-		log.Fatalf("error with connecting to database: %s", err.Error())
+		log.Fatalf("error with connecting to postresql database: %s", err.Error())
+	}
+
+	_, err = repository.NewRedisDB(repository.RedisConfig{
+		Port: viper.GetString("redis_db.port"),
+	})
+	if err != nil {
+		log.Fatalf("error with connecting to redis database: %s", err.Error())
 	}
 
 	srv := pastebin.NewServer(nil, "8080")
