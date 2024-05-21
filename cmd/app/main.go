@@ -19,6 +19,7 @@ func main() {
 		log.Fatalf("error with config file: %s", err.Error())
 	}
 
+	//postgres
 	_, err := repository.NewPostgresDB(repository.PostgresConfig{
 		Host:     viper.GetString("postgresql_db.host"),
 		Port:     viper.GetString("postgresql_db.port"),
@@ -31,12 +32,27 @@ func main() {
 		log.Fatalf("error with connecting to postresql database: %s", err.Error())
 	}
 
+	//redis
 	_, err = repository.NewRedisDB(repository.RedisConfig{
 		Port: viper.GetString("redis_db.port"),
 	})
 	if err != nil {
 		log.Fatalf("error with connecting to redis database: %s", err.Error())
 	}
+
+	//amazons3
+	db, err := repository.NewAmazonDB(repository.AmazonConfig{
+		Region:    viper.GetString("amazon_db.region"),
+		AccessKey: viper.GetString("amazon_db.access-key"),
+		SecretKey: viper.GetString("amazon_db.secret-access-key"),
+	})
+	if err != nil {
+		log.Fatalf("error with connecting to amazons3 database: %s", err.Error())
+	}
+	if err = db.CheckConnection(); err != nil {
+		log.Fatalf("error with connecting to amazons3 database: %s", err.Error())
+	}
+
 
 	srv := pastebin.NewServer(nil, "8080")
 	if err := srv.Run(); err != nil {

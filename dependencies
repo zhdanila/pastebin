@@ -4,6 +4,10 @@ go get github.com/lib/pq
 go get github.com/spf13/viper
 go get github.com/joho/godotenv
 go get github.com/go-redis/redis/v8
+go get github.com/aws/aws-sdk-go
+go get github.com/aws/aws-sdk-go/aws
+go get github.com/aws/aws-sdk-go/aws/session
+go get github.com/aws/aws-sdk-go/service/s3
 
 
 
