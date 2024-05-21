@@ -27,13 +27,11 @@ func NewAmazonDB(config AmazonConfig) (*AmazonDB, error) {
 	}
 
 	svc := s3.New(sess)
-	return &AmazonDB{svc: svc}, nil
-}
 
-func (db *AmazonDB) CheckConnection() error {
-	_, err := db.svc.ListBuckets(nil)
+	_, err = svc.ListBuckets(nil)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return nil
+
+	return &AmazonDB{svc: svc}, nil
 }
