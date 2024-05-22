@@ -20,7 +20,7 @@ func NewServer(handler http.Handler, port string) *Server {
 }
 
 func(s *Server) Run() error {
-	fmt.Printf("server started on %s port", s.httpServer.Addr)
+	fmt.Printf("server started on %s port\n", s.httpServer.Addr)
 
 	return s.httpServer.ListenAndServe()
 }
