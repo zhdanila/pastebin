@@ -17,10 +17,6 @@ func(s *PasteService) Create(userPaste models.UserPaste) (string, error) {
 	return s.repo.Paste.Create(userPaste)
 }
 
-func(s *PasteService) Get(id string, password string) (models.UserPaste, error) {
+func(s *PasteService) Get(id string, password string) (string, error) {
 	return s.repo.Paste.Get(id, password)
-}
-
-func(s *PasteService) Delete(id string) error {
-	return s.repo.Paste.Delete(id)
 }

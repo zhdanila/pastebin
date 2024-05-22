@@ -20,7 +20,6 @@ func (h *Handler) InitRoutes() *http.ServeMux {
 
 	mux.HandleFunc("POST /pastebin/", h.create)
 	mux.HandleFunc("GET /pastebin/{id}", h.get)
-	mux.HandleFunc("DELETE /pastebin/{id}", h.delete)
 
 	return mux
 }
