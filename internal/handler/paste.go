@@ -27,9 +27,16 @@ func(h *Handler) create(w http.ResponseWriter, r *http.Request) {
 }
 
 func(h *Handler) get(w http.ResponseWriter, r *http.Request) {
+	var passwordInput models.PasswordInput
+
+	err := json.NewDecoder(r.Body).Decode(&passwordInput)
+	if err != nil {
+		NewErrorResponse(w, http.StatusBadRequest, err.Error())
+		return
+	}
 	pasteId := r.PathValue("id")
 
-	paste, err := h.services.Paste.Get(pasteId, "")
+	paste, err := h.services.Paste.Get(pasteId, passwordInput.Password)
 	if err != nil {
 		NewErrorResponse(w, http.StatusBadRequest, err.Error())
 		return
@@ -46,6 +53,3 @@ func(h *Handler) get(w http.ResponseWriter, r *http.Request) {
 }
 
 
-func(h *Handler) delete(w http.ResponseWriter, r *http.Request) {
-
-}

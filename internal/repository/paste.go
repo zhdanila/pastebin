@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/go-redis/redis/v8"
 	"github.com/jmoiron/sqlx"
+	"io"
 	"pastebin/internal/models"
 	"strconv"
 	"time"
@@ -66,18 +67,54 @@ func(r *PasteRepository) Create(userPaste models.UserPaste) (string, error) {
 	return string(hash), nil
 }
 
-func(r *PasteRepository) Get(id string, password string) (models.UserPaste, error) {
-	var userPaste models.UserPaste
-
-	query := fmt.Sprintf("SELECT id, password, created_at, expires_at FROM %s WHERE id = $1", pasteTable)
-	err := r.postgresql_db.Get(&userPaste, query, id)
-	if err != nil {
-		return models.UserPaste{}, err
+func(r *PasteRepository) Get(id string, password string) (string, error) {
+	text, err := r.redis_db.HGet(ctx, id, "text").Result()
+	if err == nil {
+		storedPassword, _ := r.redis_db.HGet(ctx, id, "password").Result()
+		if password != storedPassword && storedPassword != "" {
+			return "", fmt.Errorf("incorrect password")
+		}
+		return text, nil
 	}
 
-	return userPaste, nil
-}
+	var userPaste models.PostgresPaste
 
-func(r *PasteRepository) Delete(id string) error {
-	return nil
+	query := fmt.Sprintf("SELECT password, created_at, expires_at FROM %s WHERE id = $1", pasteTable)
+	err = r.postgresql_db.Get(&userPaste, query, id)
+	if err != nil {
+		return "", err
+	}
+
+	if time.Now().After(userPaste.ExpiresAt) {
+		return "", fmt.Errorf("expired")
+	}
+
+	if password != userPaste.Password && userPaste.Password != "" {
+		return "", fmt.Errorf("incorrect password")
+	}
+
+	hash := b64.StdEncoding.EncodeToString([]byte(id))
+
+	result, err := r.amazon_db.svc.GetObject(&s3.GetObjectInput{
+		Bucket: aws.String("amazon-pastebin"),
+		Key:    aws.String(hash),
+	})
+	if err != nil {
+		return "", fmt.Errorf("error retrieving object from S3: %v", err)
+	}
+
+	objectContent, err := io.ReadAll(result.Body)
+	if err != nil {
+		return "", fmt.Errorf("error reading object content: %v", err)
+	}
+
+	err = r.redis_db.HSet(ctx, id, map[string]interface{}{
+		"text":     string(objectContent),
+		"password": password,
+	}).Err()
+	if err != nil {
+		fmt.Printf("Error setting value in Redis: %v\n", err)
+	}
+
+	return string(objectContent), nil
 }

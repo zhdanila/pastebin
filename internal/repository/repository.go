@@ -18,6 +18,5 @@ func NewRepository(postgres *sqlx.DB, redis *redis.Client, amazon *AmazonDB) *Re
 
 type Paste interface {
 	Create(userPaste models.UserPaste) (string, error)
-	Get(id string, password string) (models.UserPaste, error)
-	Delete(id string) error
+	Get(id string, password string) (string, error)
 }

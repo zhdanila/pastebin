@@ -17,6 +17,5 @@ func NewService(repos *repository.Repository) *Service {
 
 type Paste interface {
 	Create(userPaste models.UserPaste) (string, error)
-	Get(id string, password string) (models.UserPaste, error)
-	Delete(id string) error
+	Get(id string, password string) (string, error)
 }
