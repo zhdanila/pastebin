@@ -2,6 +2,7 @@ package repository
 
 import (
 	"bytes"
+	"encoding/base64"
 	b64 "encoding/base64"
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
@@ -35,9 +36,9 @@ func NewPasteRepository(postgresql_db *sqlx.DB, redis_db *redis.Client, amazon_d
 
 func(r *PasteRepository) Create(userPaste models.UserPaste) (string, error) {
 	var pasteId int
-	createPasteQuery := fmt.Sprintf("INSERT INTO %s (password, created_at, expires_at) values ($1, $2, $3) RETURNING id", pasteTable)
+	createPasteQuery := fmt.Sprintf("INSERT INTO %s (password, expires_at) values ($1, $2) RETURNING id", pasteTable)
 
-	row := r.postgresql_db.QueryRow(createPasteQuery, userPaste.Password, time.Now(), time.Now().Add(pasteTTL))
+	row := r.postgresql_db.QueryRow(createPasteQuery, userPaste.Password, time.Now().Add(pasteTTL))
 	err := row.Scan(&pasteId)
 	if err != nil {
 		return "", err
@@ -63,11 +64,11 @@ func(r *PasteRepository) Create(userPaste models.UserPaste) (string, error) {
 		return "", fmt.Errorf("unable to upload to bucket %v\n", err)
 	}
 
-	fmt.Printf("Successfully uploaded to bucket \n")
-	return string(hash), nil
+	return hash, nil
 }
 
 func(r *PasteRepository) Get(id string, password string) (string, error) {
+	//check redis
 	text, err := r.redis_db.HGet(ctx, id, "text").Result()
 	if err == nil {
 		storedPassword, _ := r.redis_db.HGet(ctx, id, "password").Result()
@@ -76,11 +77,15 @@ func(r *PasteRepository) Get(id string, password string) (string, error) {
 		}
 		return text, nil
 	}
-
 	var userPaste models.PostgresPaste
 
-	query := fmt.Sprintf("SELECT password, created_at, expires_at FROM %s WHERE id = $1", pasteTable)
-	err = r.postgresql_db.Get(&userPaste, query, id)
+	decodedId, err := base64.StdEncoding.DecodeString(id)
+	if err != nil {
+		return "", nil
+	}
+
+	query := fmt.Sprintf("SELECT password, expires_at FROM %s WHERE id = $1", pasteTable)
+	err = r.postgresql_db.Get(&userPaste, query, decodedId)
 	if err != nil {
 		return "", err
 	}
@@ -93,11 +98,9 @@ func(r *PasteRepository) Get(id string, password string) (string, error) {
 		return "", fmt.Errorf("incorrect password")
 	}
 
-	hash := b64.StdEncoding.EncodeToString([]byte(id))
-
 	result, err := r.amazon_db.svc.GetObject(&s3.GetObjectInput{
 		Bucket: aws.String("amazon-pastebin"),
-		Key:    aws.String(hash),
+		Key:    aws.String(id),
 	})
 	if err != nil {
 		return "", fmt.Errorf("error retrieving object from S3: %v", err)

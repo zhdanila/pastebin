@@ -9,7 +9,6 @@ type UserPaste struct {
 
 type PostgresPaste struct {
 	Password  string    `json:"password"`
-	CreatedAt time.Time `json:"created_at" db:"created_at"`
 	ExpiresAt time.Time `json:"expires_at" db:"expires_at"`
 }
 
