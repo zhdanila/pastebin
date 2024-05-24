@@ -12,5 +12,5 @@ redis_db:
 
 amazon_db:
   region: "eu-north-1"
-  access-key: "AKIA3FLDY237XQZJCDV5"
-  secret-access-key: "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"
+  access-key: 
+  secret-access-key: 
