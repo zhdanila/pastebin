@@ -36,12 +36,15 @@ func Run() {
 	redisDb, err := repository.NewRedisDB(repository.RedisConfig{
 		Port: viper.GetString("redis_db.port"),
 	})
+	if err != nil {
+		logger.Errorf("error with connecting to redis: %s", err.Error())
+	}
 
 	//amazons3
 	amazonDb, err := repository.NewAmazonDB(repository.AmazonConfig{
 		Region:    viper.GetString("amazon_db.region"),
-		AccessKey: viper.GetString("amazon_db.access-key"),
-		SecretKey: viper.GetString("amazon_db.secret-access-key"),
+		AccessKey: os.Getenv("AMAZON_ACCESS_KEY"),
+		SecretKey: os.Getenv("AMAZON_SECRET_ACCESS_KEY"),
 	})
 	if err != nil {
 		logger.Errorf("error with connecting to amazons3 database: %s", err.Error())

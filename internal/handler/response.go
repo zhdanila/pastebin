@@ -8,5 +8,10 @@ import (
 func NewErrorResponse(w http.ResponseWriter, statusCode int, errorString string) {
 	logger.Error(errorString)
 	w.WriteHeader(statusCode)
-	w.Write([]byte(errorString))
+	if _, err := w.Write([]byte(errorString)); err != nil {
+		// Якщо виникла помилка під час запису відповіді, логуємо її
+		logger.Errorf("Failed to write response: %v", err)
+		http.Error(w, "Failed to send response", http.StatusInternalServerError)
+		return
+	}
 }

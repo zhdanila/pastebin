@@ -2,7 +2,6 @@ package repository
 
 import (
 	"context"
-	"encoding/base64"
 	"fmt"
 	"github.com/go-redis/redis/v8"
 )
@@ -26,15 +25,4 @@ func NewRedisDB(config RedisConfig) (*redis.Client, error) {
 	}
 
 	return client, nil
-}
-
-func GenerateHash(client *redis.Client, amount int) {
-	for i := 1; i <= amount; i++ {
-		hash := base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%d", i)))
-
-		err := client.HSet(context.Background(), "myHash", fmt.Sprintf("%d", i), hash).Err()
-		if err != nil {
-			fmt.Println("Error writing to Redis:", err)
-		}
-	}
 }
