@@ -3,6 +3,7 @@ package handler
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/google/logger"
 	"net/http"
 	"pastebin/internal/models"
 )
@@ -23,7 +24,12 @@ func(h *Handler) create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusCreated)
-	w.Write([]byte(fmt.Sprintf("id - %s", id)))
+	if _, err := w.Write([]byte(fmt.Sprintf("id - %s", id))); err != nil {
+		// Якщо виникла помилка під час запису відповіді, логуємо її
+		logger.Errorf("Failed to write response: %v", err)
+		http.Error(w, "Failed to send response", http.StatusInternalServerError)
+		return
+	}
 }
 
 func(h *Handler) get(w http.ResponseWriter, r *http.Request) {
@@ -49,7 +55,12 @@ func(h *Handler) get(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
-	w.Write(marshalledPaste)
+	if _, err := w.Write(marshalledPaste); err != nil {
+		// Якщо виникла помилка під час запису відповіді, логуємо її
+		logger.Errorf("Failed to write response: %v", err)
+		http.Error(w, "Failed to send response", http.StatusInternalServerError)
+		return
+	}
 }
 
 
